@@ -253,7 +253,7 @@ footer {
     left: 0;
     right: 0;
     margin: 0 auto;
-    background: #3498db
+    background: #2670a1
 }
 
 .background-alt {
@@ -263,8 +263,8 @@ footer {
 #lead {
     position: relative;
     height: 100vh;
-    min-height: 500px;
-    max-height: 1080px;
+    min-height: 300px;
+    max-height: 800px;
     background: url(../images/lead-bg.jpg);
     background-size: cover;
     padding: 15px;
