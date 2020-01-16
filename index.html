@@ -6,8 +6,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My Portfolio</title>
-	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-	<link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,900" rel="stylesheet">
     <link rel="stylesheet" href="libs/font-awesome/css/font-awesome.min.css">
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -28,14 +28,15 @@
                 <a href="#about">About</a>
             </li>
             <li>
+                <a href="#projects">Projects</a>
+            </li>
+            <li>
                 <a href="#experience">Experience</a>
             </li>
             <li>
                 <a href="#education">Education</a>
             </li>
-            <li>
-                <a href="#projects">Projects</a>
-            </li>
+
             <li>
                 <a href="#skills">Skills</a>
             </li>
@@ -48,9 +49,7 @@
 
     <div id="lead">
         <div id="lead-content">
-            <h1>Ryan Fitzgerald</h1>
-            <h2>Software Engineer</h2>
-            <a href="#" class="btn-rounded-white">Download Resume</a>
+            <h1>Nathan Peckham</h1>
         </div>
         <!-- End #lead-content -->
 
@@ -65,48 +64,87 @@
     </div>
     <!-- End #lead -->
 
-    <div id="about">
+    <div id="projects" class="background-alt">
+        <h2 class="heading">Projects</h2>
         <div class="container">
             <div class="row">
-                <div class="col-md-4">
-                    <h2 class="heading">About Me</h2>
+                <div class="project shadow-large">
+                    <div class="project-image">
+                        <img src="images/TTAIcon.png" />
+                    </div>
+                    <!-- End .project-image -->
+                    <div class="project-info">
+                        <h3>TableTop Audio</h3>
+                        <p>
+                            A desktop program for managing audio files. TableTop Audio combines a soundboard with a music playlist. Written in C# using Unity.
+                        </p>
+                        <a href="https://nmpeckham.itch.io/tabletop-audio">Download On itch.io</a>
+                        <br>
+                        <a href="https://github.com/nmpeckham/tabletopAudio">View Source On GitHub</a>
+
+                    </div>
+                    <!-- End .project-info -->
                 </div>
-                <div class="col-md-8">
-                    <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur in iaculis ex. Etiam volutpat laoreet urna. Morbi ut tortor nec nulla commodo malesuada sit amet vel lacus. Fusce eget efficitur libero. Morbi dapibus porta quam laoreet placerat. Donec
-                        eu vehicula neque. Donec viverra lorem nunc, tempus euismod eros sollicitudin ut. Quisque et tincidunt libero. Donec id pharetra justo. Proin euismod lacinia dolor, eu scelerisque justo tempus pharetra. Vivamus nunc justo, finibus
-                        ut nisl sed, euismod rhoncus nulla. Proin sed magna egestas, egestas ante et, congue eros. In consequat, mauris dapibus tincidunt suscipit, ex libero aliquet diam, at maximus risus enim non leo.
-                    </p>
+                <!-- End .project -->
+
+                <div class="project shadow-large">
+                    <div class="project-image">
+                        <img src="images/peopleCounter.png" />
+                    </div>
+                    <!-- End .project-image -->
+                    <div class="project-info">
+                        <h3>People Counter Project</h3>
+                        <p>
+                            The people counter project was created to track traffic patterns in several locations at Memorial University. Each counter consists of a Raspberry Pi and an Arduino, which communicate using 38khz IR light pulses. When the beam is broken, a transit is
+                            said to have occured. Transit data is then regularly uploaded to a mySQL database for later viewing on a webpage. <br> I was responsible for all Raspberry Pi and Arduino code, and the design and
+                            manufacture of the hardware devices. Code is not publicly available for this project, but can be produced upon request. Written in C, C++, and Python.
+                        </p>
+                    </div>
+                    <!-- End .project-info -->
                 </div>
+                <!-- End .project -->
+
+
+                <div class="project shadow-large">
+                    <div class="project-image">
+                        <img src="images/HRIcon.png" />
+                    </div>
+                    <!-- End .project-image -->
+                    <div class="project-info">
+                        <h3>HomeRekker</h3>
+                        <p>
+                            HomeRekker is a videogame made (mostly) in 48 hours for Global Game Jam 2019. When your family decides to leave their boring life in the city to live in remote destinations, it's your responsibility to protect them from the hazards in the environment.
+                        </p>
+                        <a href="https://nmpeckham.itch.io/homerekker">Download on itch.io</a>
+                        <br>
+                        <a href="https://github.com/nmpeckham/HomeRekker">View Source On Github</a>
+                    </div>
+                    <!-- End .project-info -->
+                </div>
+                <!-- End .project -->
+
             </div>
         </div>
     </div>
-    <!-- End #about -->
+    <!-- End #projects -->
 
     <div id="experience" class="background-alt">
         <h2 class="heading">Experience</h2>
         <div id="experience-timeline">
-            <div data-date="September 2015 – September 2016">
-                <h3>Employer Name</h3>
-                <h4>Job Title</h4>
+            <div data-date="May 2011 - Current">
+                <h3>Eastern Audio</h3>
+                <h4>Lighting and Audio/Visual Technician</h4>
                 <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur in iaculis ex. Etiam volutpat laoreet urna. Morbi ut tortor nec nulla commodo malesuada sit amet vel lacus. Fusce eget efficitur libero. Morbi dapibus porta quam laoreet placerat.
+                    Responsible for operation of audio/visual equipment during high-stress, time critical live production events. <br> Responsible for set up, tear-down, and maintenance of audio visual equipment. <br>Responsible for managing teams to
+                    ensure event success for concerts, meetings, conferences, trade shows, and more.
                 </p>
             </div>
 
-            <div data-date="September 2015 – September 2016">
-                <h3>Employer Name</h3>
-                <h4>Job Title</h4>
+            <div data-date="May 2016 – December 2018">
+                <h3>Memorial University of Newfoundland</h3>
+                <h4>Special Projects</h4>
                 <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur in iaculis ex. Etiam volutpat laoreet urna. Morbi ut tortor nec nulla commodo malesuada sit amet vel lacus. Fusce eget efficitur libero. Morbi dapibus porta quam laoreet placerat.
-                </p>
-            </div>
-
-            <div data-date="September 2015 – September 2016">
-                <h3>Employer Name</h3>
-                <h4>Job Title</h4>
-                <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur in iaculis ex. Etiam volutpat laoreet urna. Morbi ut tortor nec nulla commodo malesuada sit amet vel lacus. Fusce eget efficitur libero. Morbi dapibus porta quam laoreet placerat.
+                    Responsible for heading People Counter Project development. Led development for device hardware and software.
                 </p>
             </div>
         </div>
@@ -116,104 +154,32 @@
     <div id="education">
         <h2 class="heading">Education</h2>
         <div class="education-block">
-            <h3>University of Ottawa</h3>
-            <span class="education-date">Sept 2016 - Sept 2017</span>
-            <h4>Bachelor of Science in Computer Science</h4>
+            <h3>Memorial University of Newfoundland</h3>
+            <span class="education-date">December 2015 - April 2021</span>
+            <h4>Bachelor of Science in Computer Science - Visual Computing and Gaming</h4>
             <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur in iaculis ex. Etiam volutpat laoreet urna. Morbi ut tortor nec nulla commodo malesuada sit amet vel lacus. Fusce eget efficitur libero. Morbi dapibus porta quam laoreet placerat.
+                Graduation expected April 2021. The visual computing and games major studies how to use computers to both mimic human visual processing power for things such as object recognition, and to create visual content, like games and movies.
             </p>
-        </div>
-        <!-- End .education-block -->
-
-        <div class="education-block">
-            <h3>University of Ottawa</h3>
-            <span class="education-date">Sept 2016 - Sept 2017</span>
-            <h4>Bachelor of Science in Computer Science</h4>
-            <ul>
-                <li>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                </li>
-                <li>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                </li>
-                <li>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                </li>
-            </ul>
         </div>
         <!-- End .education-block -->
     </div>
     <!-- End #education -->
 
-    <div id="projects" class="background-alt">
-        <h2 class="heading">Projects</h2>
-        <div class="container">
-            <div class="row">
-                <div class="project shadow-large">
-                    <div class="project-image">
-                        <img src="images/project.jpg" />
-                    </div>
-                    <!-- End .project-image -->
-                    <div class="project-info">
-                        <h3>Project Name Here</h3>
-                        <p>
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur in iaculis ex. Etiam volutpat laoreet urna. Morbi ut tortor nec nulla commodo malesuada sit amet vel lacus. Fusce eget efficitur libero. Morbi dapibus porta quam laoreet placerat.
-                        </p>
-                        <a href="#">View Project</a>
-                    </div>
-                    <!-- End .project-info -->
-                </div>
-                <!-- End .project -->
 
-                <div class="project shadow-large">
-                    <div class="project-image">
-                        <img src="images/project.jpg" />
-                    </div>
-                    <!-- End .project-image -->
-                    <div class="project-info">
-                        <h3>Project Name Here</h3>
-                        <p>
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur in iaculis ex. Etiam volutpat laoreet urna. Morbi ut tortor nec nulla commodo malesuada sit amet vel lacus. Fusce eget efficitur libero. Morbi dapibus porta quam laoreet placerat.
-                        </p>
-                        <a href="#">View Project</a>
-                    </div>
-                    <!-- End .project-info -->
-                </div>
-                <!-- End .project -->
-            </div>
-        </div>
-    </div>
-    <!-- End #projects -->
 
     <div id="skills">
         <h2 class="heading">Skills</h2>
         <ul>
-            <li>JavaScript</li>
-            <li>Python</li>
-            <li>Ruby</li>
-            <li>Go</li>
-            <li>Node.js</li>
-            <li>AngularJs</li>
-            <li>React</li>
-            <li>Elixir</li>
-            <li>Java</li>
-            <li>C</li>
             <li>C#</li>
-            <li>C++</li>
-            <li>Ruby on Rails</li>
-            <li>JavaScript</li>
             <li>Python</li>
-            <li>Ruby</li>
-            <li>Go</li>
-            <li>Node.js</li>
-            <li>AngularJs</li>
-            <li>React</li>
-            <li>Elixir</li>
-            <li>Java</li>
-            <li>C</li>
-            <li>C#</li>
             <li>C++</li>
-            <li>Ruby on Rails</li>
+            <li>Unity</li>
+            <li>C</li>
+            <li>Java</li>
+            <li>3D CAD</li>
+            <li>3D Printing</li>
+            <li>Adobe Photoshop</li>
+
         </ul>
     </div>
     <!-- End #skills -->
@@ -221,7 +187,7 @@
     <div id="contact">
         <h2>Get in Touch</h2>
         <div id="contact-form">
-            <form method="POST" action="https://formspree.io/email@email.com">
+            <form method="POST" action="https://formspree.io/nathan@raysonplace.ca">
                 <input type="hidden" name="_subject" value="Contact request from personal website" />
                 <input type="email" name="_replyto" placeholder="Your email" required>
                 <textarea name="message" placeholder="Your message" required></textarea>
