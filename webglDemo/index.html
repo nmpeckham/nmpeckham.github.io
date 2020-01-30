@@ -1,67 +1,87 @@
-<!--
-WebGL Water
-http://madebyevan.com/webgl-water/
-
-Copyright 2011 Evan Wallace
-Released under the MIT license
--->
-
 <!DOCTYPE html>
-<html><head>
-  <title>WebGL Water</title>
-  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-  <script src="OES_texture_float_linear-polyfill.js"></script>
-  <script src="lightgl.js"></script>
-  <script src="cubemap.js"></script>
-  <script src="renderer.js"></script>
-  <script src="water.js"></script>
-  <script src="main.js"></script>
-  <style type="text/css">
-    body { font: 13px/140% Arial, sans-serif; background: black; color: white; overflow: hidden; }
-    a { color: inherit; cursor: pointer; }
-    img { display: none; }
-    ul { padding: 0 0 0 20px; }
-    h1 { font: bold italic 30px/30px Georgia; text-align: center; }
-    h2 { font: bold italic 17px/17px Georgia; padding-top: 10px; }
-    small { display: block; font-size: 11px; line-height: 15px; }
-    canvas { position: absolute; top: 0; left: 0; }
-    #help { position: absolute; top: 0; right: 0; bottom: 0; width: 280px; padding-right: 20px; overflow: auto; }
-    #loading { position: absolute; left: 0; top: 50%; right: 300px; text-align: center; margin-top: -8px; }
-    @media (max-width: 600px) {
-      small { font-size: 8px; line-height: 10px; }
-      #help { width: 100px; font-size: 10px; line-height: 12px; }
-    }
-  </style>
-</head><body>
-  <div id="loading">Loading...</div>
-  <div id="help">
-    <h1>WebGL Water</h1>
-    <p>Made by <a href="http://madebyevan.com/">Evan Wallace</a></p>
-    <p>This demo requires a decent graphics card and up-to-date drivers. If you can't run the demo, you can still <a href="http://youtube.com/watch?v=R0O_9bp3EKQ">see it on YouTube</a>.</p>
-    <h2>Interactions:</h2>
-    <ul>
-      <li>Draw on the water to make ripples</li>
-      <li>Drag the background to rotate the camera</li>
-      <li>Press SPACEBAR to pause and unpause</li>
-      <li>Drag the sphere to move it around</li>
-      <li>Press the L key to set the light direction</li>
-      <li>Press the G key to toggle gravity</li>
-    </ul>
-    <h2>Features:</h2>
-    <ul>
-      <li>Raytraced reflections and refractions</li>
-      <li>Analytic ambient occlusion</li>
-      <li>Heightfield water simulation *</li>
-      <li>Soft shadows</li>
-      <li>Caustics (see <a href="https://medium.com/@evanwallace/rendering-realtime-caustics-in-webgl-2a99a29a0b2c">this</a> for details) **</li>
-    </ul>
-    <p><small>* requires the OES_texture_float extension<br>** requires the OES_standard_derivatives extension</small></p>
-    <p><small>Tile texture from <a href="http://www.flickr.com/photos/zooboing/3682834083/">zooboing</a> on Flickr</small></p>
-  </div>
-  <img id="tiles" src="tiles.jpg">
-  <img id="xneg" src="xneg.jpg">
-  <img id="xpos" src="xpos.jpg">
-  <img id="ypos" src="ypos.jpg">
-  <img id="zneg" src="zneg.jpg">
-  <img id="zpos" src="zpos.jpg">
-</body></html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Example</title>
+</head>
+
+<body>
+    <script type="text/javascript">
+        function shaderProgram(gl, vs, fs) {
+            var prog = gl.createProgram();
+            var addshader = function(type, source) {
+                var s = gl.createShader((type == 'vertex') ?
+                    gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
+                gl.shaderSource(s, source);
+                gl.compileShader(s);
+                if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+                    throw "Could not compile " + type +
+                        " shader:\n\n" + gl.getShaderInfoLog(s);
+                }
+                gl.attachShader(prog, s);
+            };
+            addshader('vertex', vs);
+            addshader('fragment', fs);
+            gl.linkProgram(prog);
+            if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                throw "Could not link the shader program!";
+            }
+            return prog;
+        }
+
+        function attributeSetFloats(gl, prog, attr_name, rsize, arr) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr),
+                gl.STATIC_DRAW);
+            var attr = gl.getAttribLocation(prog, attr_name);
+            gl.enableVertexAttribArray(attr);
+            gl.vertexAttribPointer(attr, rsize, gl.FLOAT, false, 0, 0);
+        }
+
+        function draw() {
+            try {
+                var gl = document.getElementById("webgl")
+                    .getContext("experimental-webgl");
+                if (!gl) {
+                    throw "x";
+                }
+            } catch (err) {
+                throw "Your web browser does not support WebGL!";
+            }
+            gl.clearColor(0.8, 0.8, 0.8, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            var prog = shaderProgram(gl,
+                "attribute vec3 pos;" +
+                "void main() {" +
+                "	gl_Position = vec4(pos, 2.0);" +
+                "}",
+                "void main() {" +
+                "	gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);" +
+                "}"
+            );
+            gl.useProgram(prog);
+
+            attributeSetFloats(gl, prog, "pos", 3, [-1, 0, 0,
+                0, 1, 0,
+                0, -1, 0,
+                1, 0, 0
+            ]);
+
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        }
+
+        function init() {
+            try {
+                draw();
+            } catch (e) {
+                alert("Error: " + e);
+            }
+        }
+        setTimeout(init, 100);
+    </script>
+    <canvas id="webgl" width="640" height="480"></canvas>
+</body>
+
+</html>
