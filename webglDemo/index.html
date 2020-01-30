@@ -62,11 +62,13 @@
                 "}"
             );
             gl.useProgram(prog);
-
-            attributeSetFloats(gl, prog, "pos", 3, [-1, 0, 0,
-                0, 1, 0,
-                0, -1, 0,
-                1, 0, 0
+            var positions = [-1, 0, 1, 0, -1]
+            var posIndex = 0;
+            attributeSetFloats(gl, prog, "pos", 3, [
+                positions[posIndex % 5], positions[(posIndex + 1) % 5], positions[(posIndex + 2) % 5],
+                positions[(posIndex + 3) % 5], positions[(posIndex + 4) % 5], positions[(posIndex) % 5],
+                positions[(posIndex + 1) % 5], positions[(posIndex + 2) % 5], positions[(posIndex + 3) % 5],
+                positions[(posIndex + 4) % 5], positions[(posIndex + 5) % 5], positions[(posIndex) % 5],
             ]);
 
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
