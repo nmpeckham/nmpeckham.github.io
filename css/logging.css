@@ -1,0 +1,21 @@
+.flex-container {
+    display: flex;
+    background-color: rgb(71, 71, 71);
+  }
+  
+  .flex-container > div {
+    background-color: #f1f1f1;
+    margin: 10px;
+    padding: 20px;
+    font-size: 30px;
+    flex-grow: 1;
+  }
+  body {
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+    text-align: center;
+    background: #1e3250;
+    }
+h1 {
+    color: white;
+}
