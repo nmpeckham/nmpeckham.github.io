@@ -21,9 +21,8 @@ function queryData() {
         if (err) {
             console.log("Unable to query. Error: " + "\n" + JSON.stringify(err, undefined, 2));
         } else {
-            console.log("Querying for movies from 1985: " + "\n" + JSON.stringify(data, undefined, 2));
+            console.log("dynamo data fetched");
         }
-        console.log(data.Items[0].hum)
         document.getElementById("temp").innerHTML = "Temperature" + "<br>" + data.Items[0].temp.toFixed(1) + "&degC"
         document.getElementById("hum").innerHTML = "Humidity" + "<br>" + data.Items[0].hum.toFixed(1) + "%"
         document.getElementById("title").innerHTML = "Most Recent Reading: " + getFormattedTime(data.Items[0].timestamp)
@@ -69,6 +68,11 @@ function drawChart(type, readingData, timestamps) {
     });
 }
 
+function resized() {
+    //Keep charts proper size when window changes
+    document.getElementById("tempChart").style.width = '100%'
+    document.getElementById("humChart").style.width = '100%'
+}
+
+window.addEventListener("resize", resized)
 queryData()
-
-
