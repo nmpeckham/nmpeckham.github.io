@@ -3,14 +3,15 @@
     <head>
         <link href="css/logging.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,900" rel="stylesheet">
+        <title>Temp and Humidity</title>
     </head>
 
     <body>
-        <h1>Most recent reading:</h1>
+        <h1 id=title>Most recent reading: --:--:-- --/--/----</h1>
         <h2 id="textarea"></h2>
         <div class="flex-container">
-            <div id=temp></div>
-            <div id=hum></div>
+            <div id=temp>Temperature<br>--.-&degC</div>
+            <div id=hum>Humidity<br>--.-%</div>
         </div>
         <script src="https://sdk.amazonaws.com/js/aws-sdk-2.831.0.min.js"></script>
         <script src="js/logging.js"></script>
