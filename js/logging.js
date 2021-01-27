@@ -5,13 +5,13 @@ AWS.config.credentials = new AWS.CognitoIdentityCredentials({
 
 var docClient = new AWS.DynamoDB.DocumentClient();
 
-function queryData() {
+function queryData(numSamples) {
     var params = {
         TableName : "tempLogs",
         IndexName: "device-index",
         KeyConditionExpression: "#T = :t",
         ScanIndexForward: false,
-        Limit: 120,
+        Limit: numSamples,
         // FilterExpression: "#T > :t",
         ExpressionAttributeNames: {"#T": "device"},
         ExpressionAttributeValues: {":t": "0"}
@@ -26,6 +26,10 @@ function queryData() {
         document.getElementById("temp").innerHTML = "Temperature" + "<br>" + data.Items[0].temp.toFixed(1) + "&degC"
         document.getElementById("hum").innerHTML = "Humidity" + "<br>" + data.Items[0].hum.toFixed(1) + "%"
         document.getElementById("title").innerHTML = "Most Recent Reading: " + getFormattedTime(data.Items[0].timestamp)
+
+        document.getElementById("charts").innerHTML = 
+        `<div><canvas id="tempChart"></canvas></div>
+         <div><canvas id="humChart"></canvas></div>`
         drawChart("tempChart", data.Items.map(a=> a.temp.toFixed(2)).reverse(), data.Items.map(a=> getFormattedTime(a.timestamp).substr(0, 8)).reverse())
         drawChart("humChart", data.Items.map(a=> a.hum.toFixed(2)).reverse(), data.Items.map(a=> getFormattedTime(a.timestamp).substr(0, 8)).reverse())
     });
@@ -41,7 +45,8 @@ function drawChart(type, readingData, timestamps) {
     var minY = (Math.min(...readingData)).toFixed() - 1;
     var maxY = parseFloat((Math.max(...readingData)).toFixed()) + 1;
 
-    var ctx = document.getElementById(type).getContext('2d');
+    var canvas = document.getElementById(type)
+    var ctx = canvas.getContext('2d');
     var myChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -60,7 +65,7 @@ function drawChart(type, readingData, timestamps) {
                 yAxes: [{
                     ticks: {
                         min: minY,
-                        max: maxY
+                        max: Math.min(maxY, 100)
                     }
                 }]
             }
@@ -74,5 +79,16 @@ function resized() {
     document.getElementById("humChart").style.width = '100%'
 }
 
+function loadChartsOneDay() {
+    queryData(2880)
+
+
+
+}
+
+function loadChartsOneHour() {
+    queryData(120)
+}
+
 window.addEventListener("resize", resized)
-queryData()
+loadChartsOneHour()
