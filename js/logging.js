@@ -5,19 +5,24 @@ AWS.config.credentials = new AWS.CognitoIdentityCredentials({
 
 var docClient = new AWS.DynamoDB.DocumentClient();
 
-function queryData(numSamples) {
+function queryData(hoursToGet) {
+
+    var currentDate = new Date()
+    var minTime = currentDate.setHours(currentDate.getHours() - hoursToGet) / 1000;
+
     var params = {
         TableName : "tempLogs",
         IndexName: "device-index",
-        KeyConditionExpression: "#T = :t",
+        KeyConditionExpression: "#D = :d AND #T > :t",
         ScanIndexForward: false,
-        Limit: numSamples,
-        // FilterExpression: "#T > :t",
-        ExpressionAttributeNames: {"#T": "device"},
-        ExpressionAttributeValues: {":t": "0"}
+        //Limit: numSamples,
+        //FilterExpression: "#T < :t",
+        ExpressionAttributeNames: {"#D": "device", "#T": "timestamp"},
+        ExpressionAttributeValues: {":d": "0", ":t":  minTime}
     };
 
     docClient.query(params, function(err, data) {
+        console.log(data)
         if (err) {
             console.log("Unable to query. Error: " + "\n" + JSON.stringify(err, undefined, 2));
         } else {
@@ -33,7 +38,6 @@ function queryData(numSamples) {
         drawChart("tempChart", data.Items.map(a=> a.temp.toFixed(2)).reverse(), data.Items.map(a=> getFormattedTime(a.timestamp).substr(0, 8)).reverse())
         drawChart("humChart", data.Items.map(a=> a.hum.toFixed(2)).reverse(), data.Items.map(a=> getFormattedTime(a.timestamp).substr(0, 8)).reverse())
     });
-    
 }
 
 function getFormattedTime(timestamp) {
@@ -80,14 +84,11 @@ function resized() {
 }
 
 function loadChartsOneDay() {
-    queryData(2880)
-
-
-
+    queryData(24)
 }
 
 function loadChartsOneHour() {
-    queryData(120)
+    queryData(1)
 }
 
 window.addEventListener("resize", resized)
