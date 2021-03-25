@@ -11,7 +11,7 @@
 */
 
 (function($) {
-
+    
     // Remove no-js class
     $('html').removeClass('no-js');
 
@@ -20,6 +20,7 @@
 
         // Treat as normal link if no-scroll class
         if ($(this).hasClass('no-scroll')) return;
+        if(this.childNodes[0].data == "Thingiverse") return;
 
         e.preventDefault();
         var heading = $(this).attr('href');
