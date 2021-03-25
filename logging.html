@@ -7,7 +7,12 @@
     </head>
 
     <body>
-        <h1 id=title>Most recent reading: --:--:-- --/--/----</h1>
+        <div>
+            <h1 id=title>Most recent reading: --:--:-- --/--/----</h1>
+            <button class="login-button" id=loginButton onclick="showLoginBox()">Login</button>
+        </div>
+
+        <!-- <h2 id=nowPlaying>Now Playing: </h2> -->
         <h2 id="textarea"></h2>
         <div class="flex-container">
             <div id=temp>Temperature<br>--.-&degC</div>
@@ -20,7 +25,12 @@
         <script src="https://sdk.amazonaws.com/js/aws-sdk-2.831.0.min.js"></script>
         <script src="js/Chart.min.js"></script>
         <script src="js/logging.js"></script>
-       <button class="button" id=oneHourBtn onclick="loadChartsOneHour()">1 hr</button>
-       <button class="button" id=oneDayBtn onclick="loadChartsOneDay()">1 day</button>
+       <button class="time-button" id=oneHourBtn onclick="loadChartsOneHour()">1 hr</button>
+       <button class="time-button" id=oneDayBtn onclick="loadChartsOneDay()">1 day</button>
+
+       <div id="loginBox" class=modal>
+           <div class="login-content">
+           </div>
+       </div>
     </body>
 </html>

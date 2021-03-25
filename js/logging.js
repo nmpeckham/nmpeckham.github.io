@@ -38,6 +38,16 @@ function queryData(hoursToGet) {
         drawChart("tempChart", data.Items.map(a=> a.temp.toFixed(2)).reverse(), data.Items.map(a=> getFormattedTime(a.timestamp).substr(0, 8)).reverse())
         drawChart("humChart", data.Items.map(a=> a.hum.toFixed(2)).reverse(), data.Items.map(a=> getFormattedTime(a.timestamp).substr(0, 8)).reverse())
     });
+
+    // var params = {
+    //     TableName : "nowPlaying",
+    // };
+
+    // docClient.scan(params, function(err, data) {
+    //     console.log(data)
+    // });
+
+
 }
 
 function getFormattedTime(timestamp) {
@@ -79,17 +89,27 @@ function drawChart(type, readingData, timestamps) {
 
 function resized() {
     //Keep charts proper size when window changes
-    document.getElementById("tempChart").style.width = '100%'
-    document.getElementById("humChart").style.width = '100%'
+    document.getElementById("tempChart").style.width = '100%';
+    document.getElementById("humChart").style.width = '100%';
 }
 
 function loadChartsOneDay() {
-    queryData(24)
+    queryData(24);
 }
 
 function loadChartsOneHour() {
-    queryData(1)
+    queryData(1);
 }
+
+// function showLoginBox() {
+//     //console.log("Login clicked");
+//     AWS.CognitoCachingCredentialsProvider credentialsProvider = new AWS.CognitoCachingCredentialsProvider(
+//         getApplicationContext(),
+//         "ca-central-1:86d62bd7-4b19-4291-bb34-7e1296ba63e6", // Identity pool ID
+//         Regions.CA_CENTRAL_1 // Region
+//     );
+//     AWS.
+// }
 
 window.addEventListener("resize", resized)
 loadChartsOneHour()
