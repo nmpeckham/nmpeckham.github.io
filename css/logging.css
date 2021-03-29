@@ -44,6 +44,6 @@ button {
 .rectangle {
   height:10px;
   width: 300px;
-  background: linear-gradient(90deg, #f1f1f1 0%, #000000 0%%);
+  background: linear-gradient(90deg, #f1f1f1 0%, #000000 0%);
   margin: auto
 }

@@ -66,7 +66,6 @@ function checkNowPlaying() {
 
 function updatePlayback() {
     let startTime = (nowPlayingData.Items[0].t)
-    let endTime = startTime + nowPlayingData.Items[0].d
     var percentDone = (Date.now() / 1000 - startTime ) / parseInt(nowPlayingData.Items[0].d)
 
     var progress = Date.now() / 1000 - nowPlayingData.Items[0].t
@@ -77,13 +76,17 @@ function updatePlayback() {
     else {
         document.getElementById("nowPlaying").innerHTML = "Now Listening To: " + nowPlayingData.Items[0].a + " - " + nowPlayingData.Items[0].l
     }
-    var progressString = Math.floor(progress / 60).toString().padStart(2, '0') + ":" + Math.floor(progress % 60).toString().padStart(2, '0')
-    var duration = nowPlayingData.Items[0].d;
-    var durationString = Math.floor(duration / 60).toString().padStart(2, '0') + ":" + Math.floor(duration % 60).toString().padStart(2, '0')
-    document.getElementById("nowPlaying").innerHTML += " - " + progressString + "/" + durationString;
+    console.log(percentDone)
+    if(percentDone <= 1) {
+        var progressString = Math.floor(progress / 60).toString().padStart(2, '0') + ":" + Math.floor(progress % 60).toString().padStart(2, '0')
+        var duration = nowPlayingData.Items[0].d;
+        var durationString = Math.floor(duration / 60).toString().padStart(2, '0') + ":" + Math.floor(duration % 60).toString().padStart(2, '0')
+        document.getElementById("nowPlaying").innerHTML += " - " + progressString + "/" + durationString;
+    
+        var cssString = "linear-gradient(90deg, #f1f1f1 ".concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
+        document.getElementById("playbackBar").style.background = cssString;
+    }
 
-    var cssString = "linear-gradient(90deg, #f1f1f1 ".concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
-    document.getElementById("playbackBar").style.background = cssString;
     if(percentDone > 1) {
         clearInterval(checkInterval)
         checkNowPlaying();
@@ -154,3 +157,4 @@ function loadChartsOneHour() {
 window.addEventListener("resize", resized);
 loadChartsOneHour();
 checkNowPlaying();
+setTimeout(checkNowPlaying, 10000)
