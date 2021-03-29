@@ -28,8 +28,6 @@ function queryData(hoursToGet) {
     docClient.query(params, function(err, data) {
         if (err) {
             console.log("Unable to query. Error: " + "\n" + JSON.stringify(err, undefined, 2));
-        } else {
-            console.log("dynamo data fetched");
         }
         document.getElementById("temp").innerHTML = "Temperature" + "<br>" + data.Items[0].temp.toFixed(1) + "&degC"
         document.getElementById("hum").innerHTML = "Humidity" + "<br>" + data.Items[0].hum.toFixed(1) + "%"
@@ -76,26 +74,29 @@ function updatePlayback() {
     var percentDone = (Date.now() / 1000 - startTime ) / parseInt(nowPlayingData.Items[0].d)
 
     var progress = Date.now() / 1000 - nowPlayingData.Items[0].t
-
-    if(nowPlayingData.Items[0].a == undefined) {
-        document.getElementById("nowPlaying").innerHTML = "Now Listening To: " + nowPlayingData.Items[0].l
+    if(nowPlayingData.Items[0].t + nowPlayingData.Items[0].d < (new Date() / 1000) + 10) {
+        document.getElementById("nowPlaying").innerHTML = "Now Listening To: Nothing";
     }
     else {
-        document.getElementById("nowPlaying").innerHTML = "Now Listening To: " + nowPlayingData.Items[0].a + " - " + nowPlayingData.Items[0].l
-    }
-    if(percentDone <= 1) {
-        var progressString = Math.floor(progress / 60).toString().padStart(2, '0') + ":" + Math.floor(progress % 60).toString().padStart(2, '0')
-        var duration = nowPlayingData.Items[0].d;
-        var durationString = Math.floor(duration / 60).toString().padStart(2, '0') + ":" + Math.floor(duration % 60).toString().padStart(2, '0')
-        document.getElementById("nowPlaying").innerHTML += " - " + progressString + "/" + durationString;
-    
-        var cssString = "linear-gradient(90deg, #f1f1f1 ".concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
-        document.getElementById("playbackBar").style.background = cssString;
-    }
-
-    if(percentDone > 1) {
-        clearInterval(checkInterval)
-        checkNowPlaying();
+        if(nowPlayingData.Items[0].a == undefined) {
+            document.getElementById("nowPlaying").innerHTML = "Now Listening To: " + nowPlayingData.Items[0].l
+        }
+        else {
+            document.getElementById("nowPlaying").innerHTML = "Now Listening To: " + nowPlayingData.Items[0].a + " - " + nowPlayingData.Items[0].l
+        }
+        if(percentDone <= 1) {
+            var progressString = Math.floor(progress / 60).toString().padStart(2, '0') + ":" + Math.floor(progress % 60).toString().padStart(2, '0')
+            var duration = nowPlayingData.Items[0].d;
+            var durationString = Math.floor(duration / 60).toString().padStart(2, '0') + ":" + Math.floor(duration % 60).toString().padStart(2, '0')
+            document.getElementById("nowPlaying").innerHTML += " - " + progressString + "/" + durationString;
+        
+            var cssString = "linear-gradient(90deg, #f1f1f1 ".concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
+            document.getElementById("playbackBar").style.background = cssString;
+        }
+        if(percentDone > 1) {
+            clearInterval(checkInterval)
+            checkNowPlaying();
+        }
     }
 }
 
