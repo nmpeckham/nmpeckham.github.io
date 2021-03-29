@@ -177,5 +177,4 @@ window.addEventListener("resize", resized);
 loadChartsOneHour();
 checkNowPlaying();
 setInterval(checkNowPlaying, 2000)
-setInterval(queryData, 30000)
 setInterval(refreshTimeSinceLastUpdate, 1000)
