@@ -6,9 +6,11 @@ AWS.config.credentials = new AWS.CognitoIdentityCredentials({
 var docClient = new AWS.DynamoDB.DocumentClient();
 var nowPlayingData;
 var checkInterval;
+var secondsSinceTempUpdate;
+var defaultFetchTime = 1
 
 function queryData(hoursToGet) {
-
+    if(hoursToGet != defaultFetchTime) hoursToGet = defaultFetchTime;
     var currentDate = new Date()
     var minTime = currentDate.setHours(currentDate.getHours() - hoursToGet) / 1000;
 
@@ -31,7 +33,9 @@ function queryData(hoursToGet) {
         }
         document.getElementById("temp").innerHTML = "Temperature" + "<br>" + data.Items[0].temp.toFixed(1) + "&degC"
         document.getElementById("hum").innerHTML = "Humidity" + "<br>" + data.Items[0].hum.toFixed(1) + "%"
-        document.getElementById("title").innerHTML = "Most Recent Reading: " + getFormattedTime(data.Items[0].timestamp)
+        var timeSinceLastUpdate = Date.now() / 1000 - data.Items[0].timestamp;
+        document.getElementById("title").innerHTML = "Most Recent Reading: " + Math.floor(timeSinceLastUpdate) + " seconds ago";
+        secondsSinceTempUpdate = timeSinceLastUpdate;
 
         document.getElementById("charts").innerHTML = 
         `<div><canvas id="tempChart"></canvas></div>
@@ -120,6 +124,9 @@ function drawChart(type, readingData, timestamps) {
             }]
         },
         options: {
+            animation: {
+                duration: 0
+            },
             scales: {
                 yAxes: [{
                     ticks: {
@@ -139,11 +146,15 @@ function resized() {
 }
 
 function loadChartsOneDay() {
+    defaultFetchTime = 24;
     queryData(24);
+
 }
 
 function loadChartsOneHour() {
+    defaultFetchTime = 1;
     queryData(1);
+
 }
 
 // function showLoginBox() {
@@ -156,7 +167,15 @@ function loadChartsOneHour() {
 //     AWS.
 // }
 
+function refreshTimeSinceLastUpdate() {
+    secondsSinceTempUpdate++;
+    if(secondsSinceTempUpdate > 31) queryData();
+    document.getElementById("title").innerHTML = "Most Recent Reading: " + Math.floor(secondsSinceTempUpdate) + " seconds ago";
+}
+
 window.addEventListener("resize", resized);
 loadChartsOneHour();
 checkNowPlaying();
 setInterval(checkNowPlaying, 2000)
+setInterval(queryData, 30000)
+setInterval(refreshTimeSinceLastUpdate, 1000)
