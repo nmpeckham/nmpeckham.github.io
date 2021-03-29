@@ -42,7 +42,6 @@ function queryData(hoursToGet) {
 }
 
 function checkNowPlaying() {
-
     var params = {
         TableName : "nowPlaying",
         Limit: 1,
@@ -58,9 +57,13 @@ function checkNowPlaying() {
     };
 
     docClient.query(params, function(err, data) {
-        nowPlayingData = data;
-        checkInterval = window.setInterval(updatePlayback, 500);
-        updatePlayback();
+        if(nowPlayingData == undefined || data.Items[0].t != nowPlayingData.Items[0].t) {
+            nowPlayingData = data;
+            clearInterval(checkInterval);
+            checkInterval = window.setInterval(updatePlayback, 500);
+            updatePlayback();
+        }
+
     });
 }
 
@@ -76,7 +79,6 @@ function updatePlayback() {
     else {
         document.getElementById("nowPlaying").innerHTML = "Now Listening To: " + nowPlayingData.Items[0].a + " - " + nowPlayingData.Items[0].l
     }
-    console.log(percentDone)
     if(percentDone <= 1) {
         var progressString = Math.floor(progress / 60).toString().padStart(2, '0') + ":" + Math.floor(progress % 60).toString().padStart(2, '0')
         var duration = nowPlayingData.Items[0].d;
@@ -157,4 +159,4 @@ function loadChartsOneHour() {
 window.addEventListener("resize", resized);
 loadChartsOneHour();
 checkNowPlaying();
-setTimeout(checkNowPlaying, 10000)
+setInterval(checkNowPlaying, 2000)
