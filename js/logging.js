@@ -4,6 +4,8 @@ AWS.config.credentials = new AWS.CognitoIdentityCredentials({
 });
 
 var docClient = new AWS.DynamoDB.DocumentClient();
+var nowPlayingData;
+var checkInterval;
 
 function queryData(hoursToGet) {
 
@@ -22,7 +24,6 @@ function queryData(hoursToGet) {
     };
 
     docClient.query(params, function(err, data) {
-        console.log(data)
         if (err) {
             console.log("Unable to query. Error: " + "\n" + JSON.stringify(err, undefined, 2));
         } else {
@@ -38,16 +39,55 @@ function queryData(hoursToGet) {
         drawChart("tempChart", data.Items.map(a=> a.temp.toFixed(2)).reverse(), data.Items.map(a=> getFormattedTime(a.timestamp).substr(0, 8)).reverse())
         drawChart("humChart", data.Items.map(a=> a.hum.toFixed(2)).reverse(), data.Items.map(a=> getFormattedTime(a.timestamp).substr(0, 8)).reverse())
     });
+}
 
-    // var params = {
-    //     TableName : "nowPlaying",
-    // };
+function checkNowPlaying() {
 
-    // docClient.scan(params, function(err, data) {
-    //     console.log(data)
-    // });
+    var params = {
+        TableName : "nowPlaying",
+        Limit: 1,
+        KeyConditionExpression: '#id = :n and t > :a',
+        ExpressionAttributeValues: {
+            ':n': "Nathan",
+            ":a": 0
+        },
+        ExpressionAttributeNames: {
+            '#id': "id"
+        },
+        ScanIndexForward: false,
+    };
 
+    docClient.query(params, function(err, data) {
+        nowPlayingData = data;
+        checkInterval = window.setInterval(updatePlayback, 500);
+        updatePlayback();
+    });
+}
 
+function updatePlayback() {
+    let startTime = (nowPlayingData.Items[0].t)
+    let endTime = startTime + nowPlayingData.Items[0].d
+    var percentDone = (Date.now() / 1000 - startTime ) / parseInt(nowPlayingData.Items[0].d)
+
+    var progress = Date.now() / 1000 - nowPlayingData.Items[0].t
+
+    if(nowPlayingData.Items[0].a == undefined) {
+        document.getElementById("nowPlaying").innerHTML = "Now Listening To: " + nowPlayingData.Items[0].l
+    }
+    else {
+        document.getElementById("nowPlaying").innerHTML = "Now Listening To: " + nowPlayingData.Items[0].a + " - " + nowPlayingData.Items[0].l
+    }
+    var progressString = Math.floor(progress / 60).toString().padStart(2, '0') + ":" + Math.floor(progress % 60).toString().padStart(2, '0')
+    var duration = nowPlayingData.Items[0].d;
+    var durationString = Math.floor(duration / 60).toString().padStart(2, '0') + ":" + Math.floor(duration % 60).toString().padStart(2, '0')
+    document.getElementById("nowPlaying").innerHTML += " - " + progressString + "/" + durationString;
+
+    var cssString = "linear-gradient(90deg, #f1f1f1 ".concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
+    document.getElementById("playbackBar").style.background = cssString;
+    if(percentDone > 1) {
+        clearInterval(checkInterval)
+        checkNowPlaying();
+    }
 }
 
 function getFormattedTime(timestamp) {
@@ -111,5 +151,6 @@ function loadChartsOneHour() {
 //     AWS.
 // }
 
-window.addEventListener("resize", resized)
-loadChartsOneHour()
+window.addEventListener("resize", resized);
+loadChartsOneHour();
+checkNowPlaying();
