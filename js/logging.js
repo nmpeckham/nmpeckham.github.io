@@ -7,7 +7,23 @@ var docClient = new AWS.DynamoDB.DocumentClient();
 var nowPlayingData;
 var checkInterval;
 var secondsSinceTempUpdate;
-var defaultFetchTime = 1
+var defaultFetchTime = 1;
+var paused = false;
+
+const nowPlayingBaseText = "Now Playing: ";
+var nowPlayingSongText = "Nothing";
+var nowPlayingTimeText = "0:00";
+
+var latestSong = "";
+var latestArtist = "";
+var latestSongDuration = 0;
+var latestStatus = "";
+var latestStatusTime;
+
+var completedTimeText = "0:00"
+var totalTimeText = "0:00"
+
+var secondsPaused = 0;
 
 function queryData(hoursToGet) {
     if(hoursToGet != defaultFetchTime) hoursToGet = defaultFetchTime;
@@ -32,7 +48,7 @@ function queryData(hoursToGet) {
         document.getElementById("temp").innerHTML = "Temperature" + "<br>" + data.Items[0].temp.toFixed(1) + "&degC"
         document.getElementById("hum").innerHTML = "Humidity" + "<br>" + data.Items[0].hum.toFixed(1) + "%"
         var timeSinceLastUpdate = Date.now() / 1000 - data.Items[0].timestamp;
-        document.getElementById("title").innerHTML = "Most Recent Reading: " + Math.floor(timeSinceLastUpdate) + " seconds ago";
+        document.getElementById("title").innerHTML = "Most Recent Temperature and Humidity Reading: " + Math.floor(timeSinceLastUpdate) + " seconds ago";
         secondsSinceTempUpdate = timeSinceLastUpdate;
 
         document.getElementById("charts").innerHTML = 
@@ -43,61 +59,152 @@ function queryData(hoursToGet) {
     });
 }
 
-function checkNowPlaying() {
+async function getLastSong(maxTime = null) {
+    if(maxTime == null) maxTime = new Date().getTime() / 1000;
     var params = {
-        TableName : "nowPlaying",
-        Limit: 1,
-        KeyConditionExpression: '#id = :n and t > :a',
+        TableName : "nowPlayingSong",
+        KeyConditionExpression: '#id = :n',
         ExpressionAttributeValues: {
             ':n': "Nathan",
-            ":a": 0
         },
         ExpressionAttributeNames: {
-            '#id': "id"
+            '#id': "id",
         },
         ScanIndexForward: false,
+        Limit: 1
     };
 
-    docClient.query(params, function(err, data) {
-        if(nowPlayingData == undefined || data.Items[0].t != nowPlayingData.Items[0].t) {
-            nowPlayingData = data;
-            clearInterval(checkInterval);
-            checkInterval = window.setInterval(updatePlayback, 500);
-            updatePlayback();
+    await docClient.query(params, function(err, data) {
+        console.log("Song");
+        console.log(data);
+        if(err) console.log(err);
+        if(data.Items.length > 0 && data.Items[0].s != latestSong) {
+            songProgress = 0;
+            latestSong = data.Items[0].s;
+            latestArtist = data.Items[0].a
+            latestSongDuration = data.Items[0].d
         }
+    });
+}
 
+async function getLastStatus() {    var params = {
+        TableName : "nowPlayingStatus",
+        KeyConditionExpression: '#id = :n',
+        ExpressionAttributeValues: {
+            ':n': "Nathan",
+        },
+        ExpressionAttributeNames: {
+            '#id': "id",
+        },
+        ScanIndexForward: false,
+        Limit: 1
+    };
+
+    await docClient.query(params, function(err, data) {
+        console.log("Status");
+        console.log(data)
+        if(err) console.log(err);
+        else if(data.Items.length > 0) {
+            if(latestStatusTime != null) {     
+                if(latestStatusTime != data.Items[0].t && data.Items[0].z == "Play") {
+                    getLastSong(); // song changed
+                }
+                latestStatus = data.Items[0].z
+                latestStatusTime = data.Items[0].t
+                progress = data.Items[0].p;
+                if(latestStatus == "Unpaused" || latestStatus == "Play") secondsPaused = 0;
+            }
+            else {
+                latestStatus = data.Items[0].z
+                latestStatusTime = data.Items[0].t
+                progress = data.Items[0].p;
+                if(latestStatus == "Unpaused" || latestStatus == "Play") secondsPaused = 0;
+            }
+
+        }
     });
 }
 
 function updatePlayback() {
-    let startTime = (nowPlayingData.Items[0].t)
-    var percentDone = (Date.now() / 1000 - startTime ) / parseInt(nowPlayingData.Items[0].d)
+    console.log(latestArtist);
+    console.log(latestSong);
 
-    var progress = Date.now() / 1000 - nowPlayingData.Items[0].t
-    if(nowPlayingData.Items[0].t + nowPlayingData.Items[0].d < (new Date() / 1000) + 10) {
-        document.getElementById("nowPlaying").innerHTML = "Now Listening To: Nothing";
+    var duration = latestSongDuration;
+    var progress =  Date.now() / 1000 - latestStatusTime;
+    //Hasn't changed song when it should have
+    if(latestStatusTime + latestSongDuration < new Date().getTime() / 1000) nowPlayingSongText = "Nothing";
+    if(latestStatus == "Paused") {
+
     }
     else {
-        if(nowPlayingData.Items[0].a == undefined) {
-            document.getElementById("nowPlaying").innerHTML = "Now Listening To: " + nowPlayingData.Items[0].l
-        }
-        else {
-            document.getElementById("nowPlaying").innerHTML = "Now Listening To: " + nowPlayingData.Items[0].a + " - " + nowPlayingData.Items[0].l
-        }
-        if(percentDone <= 1) {
-            var progressString = Math.floor(progress / 60).toString().padStart(2, '0') + ":" + Math.floor(progress % 60).toString().padStart(2, '0')
-            var duration = nowPlayingData.Items[0].d;
-            var durationString = Math.floor(duration / 60).toString().padStart(2, '0') + ":" + Math.floor(duration % 60).toString().padStart(2, '0')
-            document.getElementById("nowPlaying").innerHTML += " - " + progressString + "/" + durationString;
-        
-            var cssString = "linear-gradient(90deg, #f1f1f1 ".concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
-            document.getElementById("playbackBar").style.background = cssString;
-        }
-        if(percentDone > 1) {
-            clearInterval(checkInterval)
-            checkNowPlaying();
-        }
+         nowPlayingSongText = latestArtist + " - " + latestSong;
+         if(!latestArtist) nowPlayingSongText = " - " + latestSong;
+
+        var percentDone = progress / parseInt(latestSongDuration)
+        updatePlaybackBar(percentDone);
     }
+    // else if(latestStatus == "Paused" && latestStatusTime > latestSongTime) {
+    //     nowPlayingSongText = latestArtist + " - " + latestSong;
+    //     if(latestArtist == "") nowPlayingSongText += " - " + latestArtist;
+    //     latestSongTime -= 0.25
+    //     updateSecondsPaused();
+    // }
+    // else if(latestStatus == "Paused") {
+    //     document.getElementById("nowPlaying").innerHTML += " - " + latestStatus;    //paused or stopped
+    // }
+    // else {
+    //     console.log(latestSongTime)
+    //     console.log(secondsPaused)
+    //     var progress = Date.now() / 1000 - latestSongTime + secondsPaused;
+    //     var percentDone = progress / parseInt(latestSongDuration)
+
+    //     if(latestSongDuration + latestSongTime < (new Date() / 1000)) {
+    //         nowPlayingSongText = "Nothing"
+    //         document.getElementById("playbackBar").style.background = "#000000";
+    //     }
+    //     else {
+    //         if(latestArtist == "") {
+    //             nowPlayingSongText = latestSong;
+    //         }
+    //         else {
+    //             nowPlayingSongText = latestSong + " - " + latestArtist;
+    //         }
+    //         completedTimeText = Math.floor(progress / 60).toString().padStart(2, '0') + ":" + Math.floor(progress % 60).toString().padStart(2, '0')
+    //         var duration = latestSongDuration;
+    //         var durationString = Math.floor(duration / 60).toString().padStart(2, '0') + ":" + Math.floor(duration % 60).toString().padStart(2, '0')
+    //         nowPlayingTimeText = completedTimeText + "/" + durationString;
+        
+    //         var cssString = "linear-gradient(90deg, #f1f1f1 ".concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
+    //         document.getElementById("playbackBar").style.background = cssString;
+    //         if(percentDone > 1) {
+    //             getLastSong();
+    //         }
+    //     }
+    // }
+    var timeText = getCurrentPlaybackTime(progress, duration);
+    var nowPlayingText = nowPlayingBaseText + nowPlayingSongText + " - " + timeText;
+    if(latestStatus != "Play") nowPlayingText += latestStatus;
+    document.getElementById("nowPlaying").innerHTML = nowPlayingText;
+
+    console.log(latestStatus);
+
+}
+
+function getCurrentPlaybackTime(progress, duration) {
+    console.log(progress);
+    var completedTimeText = Math.floor(progress / 60).toString().padStart(2, '0') + ":" + Math.floor(progress % 60).toString().padStart(2, '0');
+    var totalTimeText = Math.floor(duration / 60).toString().padStart(2, '0') + ":" + Math.floor(duration % 60).toString().padStart(2, '0')
+    return completedTimeText + "/" + totalTimeText;
+}
+
+function updatePlaybackBar(percentDone) {
+    var cssString = "linear-gradient(90deg, #f1f1f1 ".concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
+    document.getElementById("playbackBar").style.background = cssString;
+}
+
+function updateSecondsPaused() {
+    secondsPaused = new Date().getTime() / 1000 - latestStatusTime
+    console.log(secondsPaused);
 }
 
 function getFormattedTime(timestamp) {
@@ -171,11 +278,13 @@ function loadChartsOneHour() {
 function refreshTimeSinceLastUpdate() {
     secondsSinceTempUpdate++;
     if(secondsSinceTempUpdate > 31) queryData();
-    document.getElementById("title").innerHTML = "Most Recent Reading: " + Math.floor(secondsSinceTempUpdate) + " seconds ago";
+    document.getElementById("title").innerHTML = "Most Recent Temperature and Humidity Reading: " + Math.floor(secondsSinceTempUpdate) + " seconds ago";
 }
 
 window.addEventListener("resize", resized);
 loadChartsOneHour();
-checkNowPlaying();
-setInterval(checkNowPlaying, 2000)
-setInterval(refreshTimeSinceLastUpdate, 1000)
+getLastSong();
+getLastStatus();
+setInterval(getLastStatus, 2000);
+setInterval(updatePlayback, 250);
+setInterval(refreshTimeSinceLastUpdate, 1000);
