@@ -8,7 +8,6 @@ var nowPlayingData;
 var checkInterval;
 var secondsSinceTempUpdate;
 var defaultFetchTime = 1;
-var paused = false;
 
 const nowPlayingBaseText = "Now Playing: ";
 var nowPlayingSongText = "Nothing";
@@ -23,7 +22,6 @@ var latestStatusTime;
 var completedTimeText = "0:00"
 var totalTimeText = "0:00"
 
-var secondsPaused = 0;
 var songProgress = 0;
 
 function queryData(hoursToGet) {
@@ -113,21 +111,40 @@ async function getLastStatus() { var params = {
 }
 
 function updatePlayback() {
-    var duration = latestSongDuration;
-    var progress =  Date.now() / 1000 - latestStatusTime + songProgress;
-    //Hasn't changed song when it should have
-    if(latestStatusTime + latestSongDuration < new Date().getTime() / 1000) nowPlayingSongText = "Nothing";
+    if(latestStatus == "Stopped") {
+        nowPlayingText = nothingPlaying()
+    }
+    else if(latestSongDuration + latestStatusTime + 60 < Date.now() / 1000) {
+        nowPlayingText = nothingPlaying()
+    }
+    // else if(latestStatus == "Seek") {
+    //     songProgress = 
+    // }
+    else {
+        var duration = latestSongDuration;
+        var progress =  Date.now() / 1000 - latestStatusTime + songProgress;
+        //Hasn't changed song when it should have
+        if(latestStatusTime + latestSongDuration < new Date().getTime() / 1000) nowPlayingSongText = "Nothing";
+    
+        nowPlayingSongText = latestArtist + " - " + latestSong;
+        if(!latestArtist) nowPlayingSongText = " - " + latestSong;
+    
+        var percentDone = progress / parseInt(latestSongDuration)
+        updatePlaybackBar(percentDone);
+    
+        var timeText = getCurrentPlaybackTime(progress, duration);
+        var nowPlayingText = nowPlayingBaseText + nowPlayingSongText + " - " + timeText;
+        nowPlayingText += (latestStatus == "Paused" ? " - " + latestStatus : "");
+    }
 
-    nowPlayingSongText = latestArtist + " - " + latestSong;
-    if(!latestArtist) nowPlayingSongText = " - " + latestSong;
-
-    var percentDone = progress / parseInt(latestSongDuration)
-    updatePlaybackBar(percentDone);
-
-    var timeText = getCurrentPlaybackTime(progress, duration);
-    var nowPlayingText = nowPlayingBaseText + nowPlayingSongText + " - " + timeText;
-    nowPlayingText += (latestStatus == "Paused" ? " - " + latestStatus : "");
     document.getElementById("nowPlaying").innerHTML = nowPlayingText;
+}
+
+function nothingPlaying() {
+
+    var cssString = "linear-gradient(90deg, #f1f1f1 0%, #000000 0%"//.concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
+    document.getElementById("playbackBar").style.background = cssString;
+    return nowPlayingBaseText + "Nothing"
 }
 
 function getCurrentPlaybackTime(progress, duration) {
@@ -148,11 +165,6 @@ function updatePlaybackBar(percentDone) {
     }
     var cssString = "linear-gradient(90deg, #f1f1f1 ".concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
     document.getElementById("playbackBar").style.background = cssString;
-}
-
-function updateSecondsPaused() {
-    secondsPaused = new Date().getTime() / 1000 - latestStatusTime
-    console.log(secondsPaused);
 }
 
 function getFormattedTime(timestamp) {
