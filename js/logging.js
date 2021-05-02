@@ -164,7 +164,7 @@ function drawIndividualChart(chartType, readingData) {
             },
             scales: {
                 xAxes: [{
-                    type: 'timeseries',
+                    type: 'time',
                 }],
                 yAxes: {
                         min: minY,
