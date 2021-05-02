@@ -27,6 +27,7 @@ function queryData(hoursToGet = null) {
     //console.log(hoursToGet)
     var currentDate = new Date()
     var minTime = currentDate.setHours(currentDate.getHours() - hoursToGet) / 1000;
+    console.log(minTime)
 
     var params = {
         TableName : "tempLogs",
@@ -53,7 +54,7 @@ function queryData(hoursToGet = null) {
                 document.getElementById("charts").innerHTML = 
                 `<div><canvas id="tempChart"></canvas></div>
                     <div><canvas id="humChart"></canvas></div>`
-                timeReadings = data.Items.map(a=> a.timestamp)//getFormattedTime(a.timestamp).substr(0, 8)).reverse()
+                timeReadings = data.Items.map(a=> a.timestamp).reverse()//getFormattedTime(a.timestamp).substr(0, 8)).reverse()
                 tempReadings = data.Items.map(a=> a.temp.toFixed(2)).reverse();
                 humReadings = data.Items.map(a=> a.hum.toFixed(2)).reverse();
 
@@ -88,18 +89,24 @@ function updateChart() {
 
         else {
             if(tempReadings != undefined) {
-                tempReadings.push(data.Items[0].temp.toFixed(2))
-                humReadings.push(data.Items[0].hum.toFixed(2))
-                timeReadings.push(data.Items[0].timestamp)//getFormattedTime(data.Items[0].timestamp).substr(0, 8))
+                var newItem = {x: 0, y: 0}
+                newItem.x = getFormattedTime(data.Items[0].timestamp);
+                newItem.y = data.Items[0].temp.toFixed(2);
+                tempChart.data.datasets[0].data.push(newItem);
+                tempChart.update();
+
+                var newItem = {x: 0, y: 0}
+                newItem.x = getFormattedTime(data.Items[0].timestamp)
+                newItem.y = data.Items[0].hum.toFixed(2);
+                humChart.data.datasets[0].data.push(newItem);
+                humChart.update();
             }
             else {
                 tempReadings = [data.Items[0].temp.toFixed(2)]
                 humReadings = [data.Items[0].hum.toFixed(2)]
                 timeReadings = [data.Items[0].timestamp]//[getFormattedTime(data.Items[0].timestamp).substr(0, 8)]
             }
-            drawCharts();
         }
-
     });
 }
 
@@ -117,7 +124,7 @@ function drawCharts() {
         newItem.y = tempReadings[i]
         dataPoints.push(newItem)
     }
-    drawIndividualChart("tempChart", dataPoints)
+    tempChart = drawIndividualChart("tempChart", dataPoints)
     
     dataPoints = []
     for(var i = 0 ; i < timeReadings.length ; i++) {
@@ -126,7 +133,7 @@ function drawCharts() {
         newItem.y = humReadings[i]
         dataPoints.push(newItem)
     }
-    drawIndividualChart("humChart", dataPoints)
+    humChart = drawIndividualChart("humChart", dataPoints)
 }
 
 //draw a chart with a given type and data
@@ -157,8 +164,7 @@ function drawIndividualChart(chartType, readingData) {
             },
             scales: {
                 xAxes: [{
-                    type: 'time',
-                    distibution: "linear"
+                    type: 'timeseries',
                 }],
                 yAxes: {
                         min: minY,
@@ -167,6 +173,7 @@ function drawIndividualChart(chartType, readingData) {
             }
         }
     });
+    return myChart
 }
 
 function resized() {
@@ -196,7 +203,7 @@ function loadChartsOneHour() {
 
 function refreshTimeSinceLastUpdate() {
     secondsSinceTempUpdate++;
-    if(secondsSinceTempUpdate > 2) updateChart();
+    if(secondsSinceTempUpdate > 31) updateChart();
     document.getElementById("title").innerHTML = "Most Recent Temperature and Humidity Reading: " + Math.floor(secondsSinceTempUpdate) + " seconds ago";
 }
 
