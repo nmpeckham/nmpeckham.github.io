@@ -23,8 +23,13 @@
             <div><canvas id="humChart"></canvas></div>
         </div>
         <script src="https://sdk.amazonaws.com/js/aws-sdk-2.831.0.min.js"></script>
-        <script src="js/Chart.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.2.1/dist/chart.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/luxon@1.26.0/build/global/luxon.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@0.2.1"></script>
         <script src="js/logging.js"></script>
+        <script src="js/nowPlaying.js"></script>
+
+
        <button class="time-button" id=oneHourBtn onclick="loadChartsOneHour()">1 hr</button>
        <button class="time-button" id=oneDayBtn onclick="loadChartsOneDay()">1 day</button>
        <h1 id=title>Most Recent Temperature and Humidity Reading: -- seconds ago</h1>

@@ -4,28 +4,27 @@ AWS.config.credentials = new AWS.CognitoIdentityCredentials({
 });
 
 var docClient = new AWS.DynamoDB.DocumentClient();
-var nowPlayingData;
-var checkInterval;
-var secondsSinceTempUpdate;
+
+var secondsSinceTempUpdate = 0;
 var defaultFetchTime = 1;
 
-const nowPlayingBaseText = "Now Playing: ";
-var nowPlayingSongText = "Nothing";
-var nowPlayingTimeText = "0:00";
+var tempReadings;
+var humReadings;
+var timeReadings;
 
-var latestSong = "";
-var latestArtist = "";
-var latestSongDuration = 0;
-var latestStatus = "";
-var latestStatusTime;
+var tempChart;
+var humChart;
 
-var completedTimeText = "0:00"
-var totalTimeText = "0:00"
 
-var songProgress = 0;
+function queryData(hoursToGet = null) {
 
-function queryData(hoursToGet) {
-    if(hoursToGet != defaultFetchTime) hoursToGet = defaultFetchTime;
+    if(hoursToGet == null) {
+        hoursToGet = defaultFetchTime
+    }
+    else {
+        defaultFetchTime = hoursToGet;
+    }
+    //console.log(hoursToGet)
     var currentDate = new Date()
     var minTime = currentDate.setHours(currentDate.getHours() - hoursToGet) / 1000;
 
@@ -34,8 +33,6 @@ function queryData(hoursToGet) {
         IndexName: "device-index",
         KeyConditionExpression: "#D = :d AND #T > :t",
         ScanIndexForward: false,
-        //Limit: numSamples,
-        //FilterExpression: "#T < :t",
         ExpressionAttributeNames: {"#D": "device", "#T": "timestamp"},
         ExpressionAttributeValues: {":d": "0", ":t":  minTime}
     };
@@ -44,151 +41,114 @@ function queryData(hoursToGet) {
         if (err) {
             console.log("Unable to query. Error: " + "\n" + JSON.stringify(err, undefined, 2));
         }
-        document.getElementById("temp").innerHTML = "Temperature" + "<br>" + data.Items[0].temp.toFixed(1) + "&degC"
-        document.getElementById("hum").innerHTML = "Humidity" + "<br>" + data.Items[0].hum.toFixed(1) + "%"
-        var timeSinceLastUpdate = Date.now() / 1000 - data.Items[0].timestamp;
-        document.getElementById("title").innerHTML = "Most Recent Temperature and Humidity Reading: " + Math.floor(timeSinceLastUpdate) + " seconds ago";
-        secondsSinceTempUpdate = timeSinceLastUpdate;
+        else if(data != undefined) {
+            //console.log(data)
+            if(data.Items[0] != undefined) {
+                document.getElementById("temp").innerHTML = "Temperature" + "<br>" + data.Items[0].temp.toFixed(1) + "&degC"
+                document.getElementById("hum").innerHTML = "Humidity" + "<br>" + data.Items[0].hum.toFixed(1) + "%"
+                var timeSinceLastUpdate = Date.now() / 1000 - data.Items[0].timestamp;
+                document.getElementById("title").innerHTML = "Most Recent Temperature and Humidity Reading: " + Math.floor(timeSinceLastUpdate) + " seconds ago";
+                secondsSinceTempUpdate = timeSinceLastUpdate;
 
-        document.getElementById("charts").innerHTML = 
-        `<div><canvas id="tempChart"></canvas></div>
-         <div><canvas id="humChart"></canvas></div>`
-        drawChart("tempChart", data.Items.map(a=> a.temp.toFixed(2)).reverse(), data.Items.map(a=> getFormattedTime(a.timestamp).substr(0, 8)).reverse())
-        drawChart("humChart", data.Items.map(a=> a.hum.toFixed(2)).reverse(), data.Items.map(a=> getFormattedTime(a.timestamp).substr(0, 8)).reverse())
+                document.getElementById("charts").innerHTML = 
+                `<div><canvas id="tempChart"></canvas></div>
+                    <div><canvas id="humChart"></canvas></div>`
+                timeReadings = data.Items.map(a=> a.timestamp)//getFormattedTime(a.timestamp).substr(0, 8)).reverse()
+                tempReadings = data.Items.map(a=> a.temp.toFixed(2)).reverse();
+                humReadings = data.Items.map(a=> a.hum.toFixed(2)).reverse();
+
+                //console.log(tempReadings);
+                drawCharts();
+            }
+            
+        }
     });
 }
 
-async function getLastSong(maxTime = null) {
-    if(maxTime == null) maxTime = new Date().getTime() / 1000;
+//Get a single latest reading and update charts
+function updateChart() {
+    secondsSinceTempUpdate = 0;
+    var minTime = Date.now() / 1000;
     var params = {
-        TableName : "nowPlayingSong",
-        KeyConditionExpression: '#id = :n',
-        ExpressionAttributeValues: {
-            ':n': "Nathan",
-        },
-        ExpressionAttributeNames: {
-            '#id': "id",
-        },
+        TableName : "tempLogs",
+        IndexName: "device-index",
+        KeyConditionExpression: "#D = :d AND #T < :t",
         ScanIndexForward: false,
+        //Limit: numSamples,
+        //FilterExpression: "#T < :t",
+        ExpressionAttributeNames: {"#D": "device", "#T": "timestamp"},
+        ExpressionAttributeValues: {":d": "0", ":t":  minTime},
         Limit: 1
     };
 
-    const data = await docClient.query(params).promise();
-    if(data.Items.length > 0 && data.Items[0].s != latestSong) {
-        songProgress = 0;
-        latestSong = data.Items[0].s;
-        latestArtist = data.Items[0].a
-        latestSongDuration = data.Items[0].d
-    }
-}
-
-async function getLastStatus() { var params = {
-        TableName : "nowPlayingStatus",
-        KeyConditionExpression: '#id = :n',
-        ExpressionAttributeValues: {
-            ':n': "Nathan",
-        },
-        ExpressionAttributeNames: {
-            '#id': "id",
-        },
-        ScanIndexForward: false,
-        Limit: 1
-    };
-
-    const data = await docClient.query(params).promise();
-
-    if(data.Items.length > 0) {
-        if(latestStatusTime != null) {     
-            if(latestStatusTime != data.Items[0].t && data.Items[0].z == "Play") {
-                getLastSong(); // song changed
-            }
+    docClient.query(params, function(err, data) {
+        if (err) {
+            console.log("Unable to query. Error: " + "\n" + JSON.stringify(err, undefined, 2));
         }
-        latestStatus = data.Items[0].z
-        latestStatusTime = data.Items[0].t
-        songProgress = 0;
-        if("p" in data.Items[0]) songProgress = data.Items[0].p;
-    }
-}
 
-function updatePlayback() {
-    if(latestStatus == "Stopped") {
-        nowPlayingText = nothingPlaying()
-    }
-    else if(latestSongDuration + latestStatusTime + 60 < Date.now() / 1000) {
-        nowPlayingText = nothingPlaying()
-    }
-    // else if(latestStatus == "Seek") {
-    //     songProgress = 
-    // }
-    else {
-        var duration = latestSongDuration;
-        var progress =  Date.now() / 1000 - latestStatusTime + songProgress;
-        //Hasn't changed song when it should have
-        if(latestStatusTime + latestSongDuration < new Date().getTime() / 1000) nowPlayingSongText = "Nothing";
-    
-        nowPlayingSongText = latestArtist + " - " + latestSong;
-        if(!latestArtist) nowPlayingSongText = " - " + latestSong;
-    
-        var percentDone = progress / parseInt(latestSongDuration)
-        updatePlaybackBar(percentDone);
-    
-        var timeText = getCurrentPlaybackTime(progress, duration);
-        var nowPlayingText = nowPlayingBaseText + nowPlayingSongText + " - " + timeText;
-        nowPlayingText += (latestStatus == "Paused" ? " - " + latestStatus : "");
-    }
+        else {
+            if(tempReadings != undefined) {
+                tempReadings.push(data.Items[0].temp.toFixed(2))
+                humReadings.push(data.Items[0].hum.toFixed(2))
+                timeReadings.push(data.Items[0].timestamp)//getFormattedTime(data.Items[0].timestamp).substr(0, 8))
+            }
+            else {
+                tempReadings = [data.Items[0].temp.toFixed(2)]
+                humReadings = [data.Items[0].hum.toFixed(2)]
+                timeReadings = [data.Items[0].timestamp]//[getFormattedTime(data.Items[0].timestamp).substr(0, 8)]
+            }
+            drawCharts();
+        }
 
-    document.getElementById("nowPlaying").innerHTML = nowPlayingText;
-}
-
-function nothingPlaying() {
-
-    var cssString = "linear-gradient(90deg, #f1f1f1 0%, #000000 0%"//.concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
-    document.getElementById("playbackBar").style.background = cssString;
-    return nowPlayingBaseText + "Nothing"
-}
-
-function getCurrentPlaybackTime(progress, duration) {
-    var completedTimeText;
-    if(latestStatus == "Paused") {
-        completedTimeText = Math.floor(songProgress / 60).toString().padStart(2, '0') + ":" + Math.floor(songProgress % 60).toString().padStart(2, '0');
-    }
-    else {
-        completedTimeText = Math.floor(progress / 60).toString().padStart(2, '0') + ":" + Math.floor(progress % 60).toString().padStart(2, '0');
-    }
-    var totalTimeText = Math.floor(duration / 60).toString().padStart(2, '0') + ":" + Math.floor(duration % 60).toString().padStart(2, '0')
-    return completedTimeText + "/" + totalTimeText;
-}
-
-function updatePlaybackBar(percentDone) {
-    if(latestStatus == "Paused") {
-        percentDone = (songProgress / latestSongDuration);
-    }
-    var cssString = "linear-gradient(90deg, #f1f1f1 ".concat(percentDone * 100, "%, #000000 ", 1 - percentDone,  "%)");
-    document.getElementById("playbackBar").style.background = cssString;
+    });
 }
 
 function getFormattedTime(timestamp) {
     var currentDate = new Date(timestamp * 1000)
-    return currentDate.getHours() + ":" + ("0" + currentDate.getMinutes()).substr(-2) + ":" + ("0" + currentDate.getSeconds()).substr(-2) + " " + currentDate.getDate() + "/" + ("0" + (currentDate.getMonth() + 1)).substr(-2) + "/" + currentDate.getFullYear()
+    return  currentDate.getDate() + "/" + ("0" + (currentDate.getMonth() + 1)).substr(-2) + "/" + currentDate.getFullYear() + " " + currentDate.getHours() + ":" + ("0" + currentDate.getMinutes()).substr(-2) + ":" + ("0" + currentDate.getSeconds()).substr(-2)
 }
 
-function drawChart(type, readingData, timestamps) {
-    var minY = (Math.min(...readingData)).toFixed() - 1;
-    var maxY = parseFloat((Math.max(...readingData)).toFixed()) + 1;
+function drawCharts() {
+    var dataPoints = []
 
-    var canvas = document.getElementById(type)
-    var ctx = canvas.getContext('2d');
+    for(var i = 0 ; i < timeReadings.length ; i++) {
+        var newItem = {x: 0, y: 0}
+        newItem.x = getFormattedTime(timeReadings[i])//timeReadings[i];
+        newItem.y = tempReadings[i]
+        dataPoints.push(newItem)
+    }
+    drawIndividualChart("tempChart", dataPoints)
+    
+    dataPoints = []
+    for(var i = 0 ; i < timeReadings.length ; i++) {
+        var newItem = {x: 0, y: 0}
+        newItem.x = getFormattedTime(timeReadings[i])//timeReadings[i];
+        newItem.y = humReadings[i]
+        dataPoints.push(newItem)
+    }
+    drawIndividualChart("humChart", dataPoints)
+}
+
+//draw a chart with a given type and data
+function drawIndividualChart(chartType, readingData) {
+    
+    var minY = Math.min(...readingData.map(a => a.y)).toFixed() - 1
+    var maxY = parseFloat(Math.max(...readingData.map(a => a.y)).toFixed()) + 1;
+
+    var chart = document.getElementById(chartType)
+    var ctx = chart.getContext('2d');
     var myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: timestamps,
+            labels: [],//timestamps,
             datasets: [{
-                label: type == "tempChart" ? "Temperature" : "Humidity",
-                data: readingData,
+                label: chartType == "tempChart" ? "Temperature" : "Humidity",
+                data: readingData ,
                 backgroundColor: [
-                    type == "tempChart" ? 'rgba(255, 99, 132, 0.4)' : 'rgba(128, 50, 255, 0.4)',
+                    chartType == "tempChart" ? 'rgba(255, 99, 132, 0.4)' : 'rgba(128, 50, 255, 0.4)',
                 ],
-                borderWidth: 1
+                borderWidth: 1,
+                fill: true
             }]
         },
         options: {
@@ -196,12 +156,14 @@ function drawChart(type, readingData, timestamps) {
                 duration: 0
             },
             scales: {
-                yAxes: [{
-                    ticks: {
+                xAxes: [{
+                    type: 'time',
+                    distibution: "linear"
+                }],
+                yAxes: {
                         min: minY,
                         max: Math.min(maxY, 100)
-                    }
-                }]
+                }
             }
         }
     });
@@ -209,48 +171,38 @@ function drawChart(type, readingData, timestamps) {
 
 function resized() {
     //Keep charts proper size when window changes
-    document.getElementById("tempChart").style.width = '100%';
-    document.getElementById("humChart").style.width = '100%';
+    tempChart.style.width = '100%';
+    humChart.style.width = '100%';
 }
 
 function loadChartsOneDay() {
-    defaultFetchTime = 24;
     queryData(24);
 
 }
 
 function loadChartsOneHour() {
-    defaultFetchTime = 1;
     queryData(1);
 
 }
 
 // function showLoginBox() {
 //     //console.log("Login clicked");
-//     AWS.CognitoCachingCredentialsProvider credentialsProvider = new AWS.CognitoCachingCredentialsProvider(
+//     AWS.CognitoCachingCredentialsProvider. credentialsProvider = new AWS.CognitoCachingCredentialsProvider(
 //         getApplicationContext(),
 //         "ca-central-1:86d62bd7-4b19-4291-bb34-7e1296ba63e6", // Identity pool ID
 //         Regions.CA_CENTRAL_1 // Region
 //     );
-//     AWS.
 // }
 
 function refreshTimeSinceLastUpdate() {
     secondsSinceTempUpdate++;
-    if(secondsSinceTempUpdate > 31) queryData();
+    if(secondsSinceTempUpdate > 2) updateChart();
     document.getElementById("title").innerHTML = "Most Recent Temperature and Humidity Reading: " + Math.floor(secondsSinceTempUpdate) + " seconds ago";
 }
 
-async function main() {
+function main() {
     window.addEventListener("resize", resized);
     loadChartsOneHour();
-
-    await getLastSong();
-    await getLastStatus();
-    updatePlayback();
-
-    setInterval(getLastStatus, 2000);
-    setInterval(updatePlayback, 250);
     setInterval(refreshTimeSinceLastUpdate, 1000);
 }
 
